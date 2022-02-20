@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>ViNet Pool</title>
+	<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<div class="chart-container">
+    <canvas id="myChart"></canvas>
+</div>
+
+<div class="right-col">
+	<div class="title">Lịch sử giao dịch</div>
+	<div class="history" id="history">
+		
+	</div>
+	<div class="currentStatus">
+		<div class="title">Trạng thái</div>
+		<div class="state">
+			<div>Money In Pool: <span id="moneyInPool"></span></div>
+			<div>Token In Pool: <span id="tokenInPool"></span></div>
+			<div>Price: <span id="price"></span></div>
+			<button onClick="resetPool()">Reset Pool</button>
+			<select id="chartType" onchange="draw(this)">
+				<option value="price-token">Giá - TokenInPool</option>
+				<option value="price-time">Giá - Time</option>
+			</select>
+		</div>
+	</div>
+</div>
+<div class="clear"></div>
+<div class="form">
+	<div><span class="label">Hành động : </span><select id="action">
+			<option value="buy">Mua</option>
+			<option value="sell">Bán</option>
+		</select>
+	</div>
+	<div><span class="label">Địa chỉ : </span><input type="text" id="address" />
+	</div>
+	<div><span class="label">Số lượng : </span><input type="number" id="amount" />
+	</div>
+	<div>
+		<button onClick="submitForm()">Submit</button>
+	</div>
+</div>
+
+<script>
+let historyData = []
+let forecastData = []
+let selected = -1;
+let chart = null;
+
+var formatter = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+
+  // These options are needed to round to whole numbers if that's what you want.
+  //minimumFractionDigits: 0, // (this suffices for whole numbers, but will print 2500.10 as $2,500.1)
+  //maximumFractionDigits: 0, // (causes 2500.99 to be printed as $2,501)
+});
+
+function chartDatasets() {
+	const backgroundColor = new Array(historyData.length).fill('green');
+	if ( backgroundColor[selected] )
+		backgroundColor[selected] = 'red'
+	// function xValue(p) {
+	// 	switch (  ) {
+	// 		case 'price-token':
+	// 			return 
+	// 	}
+	// }
+	return [{
+			type: 'bubble',
+	    label: 'Token / Price',
+	    data: historyData.map((p,idx) => ({
+	    	x: document.getElementById('chartType').value=='price-token' ? p.tokenInPool : idx,
+	    	y: p.moneyInPool/p.tokenInPool,
+	    	r: 6
+	    })),
+	    backgroundColor
+	}, {
+		type: 'scatter',
+		label: "forecast",
+     data: forecastData.map((p,idx) => ({
+     	x: document.getElementById('chartType').value=='price-token' ? p.tokenInPool : idx,
+     	y: p.moneyInPool/p.tokenInPool
+     }))
+	}]
+}
+function draw() {
+	if ( chart ) {
+		chart.data.datasets = chartDatasets();
+		chart.update()
+		return;
+	}
+	const ctx = document.getElementById('myChart').getContext('2d');
+	console.log(chartDatasets())
+	
+	chart = new Chart(ctx, {
+	    data: {
+	        // labels: ['Red', 'Blue', 'Yellow', 'Green', 'Purple', 'Orange'],
+	        datasets: chartDatasets()
+	    },
+	    options: {
+	        scales: {
+	            y: {
+	                beginAtZero: true
+	            }
+	        },
+	        animation: {
+		        duration: 0
+		    }
+	    }
+	});
+}
+function select(idx) {
+	selected = idx;
+	draw()
+	history()
+	document.getElementById('moneyInPool').innerHTML = formatter.format(historyData[idx].moneyInPool);
+	document.getElementById('tokenInPool').innerHTML = formatter.format(historyData[idx].tokenInPool);
+	document.getElementById('price').innerHTML = historyData[idx].moneyInPool/historyData[idx].tokenInPool;
+}
+function history() {
+	let listItems = historyData.map((p,idx) => `<ul class="history-item ${idx==selected?'active':''}" onClick="select(${idx})">
+			<li style="width: 30px">#${idx+1}</li>
+			<li>${p.desc}</li>
+		</ul>`)
+	document.getElementById('history').innerHTML = listItems.join('')
+}
+function submitForm() {
+	const action = document.getElementById('action').value;
+	const address = document.getElementById('address').value;
+	const amount = document.getElementById('amount').value;
+
+	fetch('/'+action, {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json'
+		},
+		body: JSON.stringify({ address, amount })
+	}).then(res => res.json()).then(res => {
+		console.log(res)
+		loadData()
+	})
+}
+function loadForecast(maxToken, maxMoney) {
+	return fetch(`/forecast?maxToken=${maxToken}&maxMoney=${maxMoney}`).then(res => res.json()).then(res => {
+		forecastData = res;
+		return true;
+	}).catch(e => {
+		return []
+	})
+}
+function loadData() {
+	fetch('/history').then(res => res.json()).then(res => {
+		historyData = res
+
+		let maxToken=0, maxMoney=0;
+		historyData.forEach(p => {
+			maxToken = maxToken>p.tokenInPool ? maxToken : p.tokenInPool;
+			maxMoney = maxMoney>p.moneyInPool ? maxMoney : p.moneyInPool;
+		})
+		loadForecast(maxToken, maxMoney).then(res => {
+			draw()
+			history()
+		})
+	})
+}
+function resetPool() {
+	fetch('/reset').then(res => res.json()).then(res => {
+		window.location.reload()
+	});
+}
+loadData()
+</script>
+<style type="text/css">
+.chart-container {
+	float: left;
+	width: 80%;
+	position: relative;
+}
+.right-col {
+	float: right;
+	width: 20%;
+}
+ul {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+}
+li {
+	display: inline-block;
+}
+.title {
+	line-height: 30px;
+	background-color: rgba(242, 153, 74, 0.5);
+	padding: 0 6px;
+}
+.history {
+	max-height: 400px;
+	overflow-y: auto;
+}
+.history-item {
+	padding: 8px 6px;
+	cursor: pointer;
+}
+.history-item:hover {
+	background-color: rgba(239, 239, 239, 0.2);
+}
+.history-item.active {
+	background-color: rgba(239, 239, 239, 0.5);
+}
+.clear {
+	clear: both;
+}
+.form > div, .state > div {
+	line-height: 30px;
+}
+.form .label {
+	width: 100px;
+  display: inline-block;
+}
+</style>
+</body>
+</html>
