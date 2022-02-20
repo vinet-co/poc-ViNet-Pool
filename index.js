@@ -78,9 +78,9 @@ app.get('/forecastx', (req, res) => { // content-type: json
 
   res.send(steps)
 })
-app.get('/script', (req, res) => { // content-type: json
+app.post('/script', (req, res) => { // content-type: json
   let scriptPool = new VinetPool();
-  let script = req.query.script || []
+  let script = req.body.script || []
   let steps = [];
   for ( let event of script ) {
     scriptPool[event.name](event.address, event.amount)
