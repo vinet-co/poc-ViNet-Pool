@@ -1,9 +1,11 @@
 const express = require('express')
 const path = require('path')
+const cors = require('cors');
 const bodyParser = require('body-parser')
 const VinetPool = require('./vinetPoolFixed')
 var pool = new VinetPool()
 const app = express()
+app.use(cors());
 const port = 3001
 let records = []
 
