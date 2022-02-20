@@ -64,7 +64,7 @@ app.get('/reset', (req, res) => { // content-type: json
   records = []
   res.send({status: true})
 })
-app.get('/forecastx', (req, res) => { // content-type: json
+app.get('/forecast', (req, res) => { // content-type: json
   let forecastPool = new VinetPool();
   let maxToken = req.query.maxToken || 100000
   let maxMoney = req.query.maxMoney || 10000
