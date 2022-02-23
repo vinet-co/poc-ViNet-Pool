@@ -71,7 +71,7 @@ app.get('/forecast', (req, res) => { // content-type: json
   let steps = [];
   for ( let i=0; i<10000; i++ ) {
     console.log("forecastPool.currentStep", forecastPool.currentStep, (2**(forecastPool.currentStep-1)), (2**(forecastPool.currentStep-1))*1000)
-    forecastPool.buy('forecast', 2^(forecastPool.currentStep-1)*1000);
+    forecastPool.buy('forecast', (2**(forecastPool.currentStep-1))*1000);
     steps.push({
       moneyInPool: forecastPool._moneyInPool,
       tokenInPool: forecastPool._tokenInPool
