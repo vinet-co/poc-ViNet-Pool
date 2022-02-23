@@ -77,7 +77,7 @@ app.get('/forecast', (req, res) => { // content-type: json
       moneyInPool: forecastPool._moneyInPool,
       tokenInPool: forecastPool._tokenInPool
     })
-    if ( forecastPool._moneyInPool/forecastPool._tokenInPool>maxPrice && forecastPool._tokenInPool>maxToken ) break;
+    if ( forecastPool._moneyInPool/forecastPool._tokenInPool>maxPrice && forecastPool._moneyInPool>maxMoney ) break;
     // if ( forecastPool._moneyInPool>maxMoney || forecastPool._tokenInPool>maxToken || isNaN(forecastPool._tokenInPool) ) break;
   }
 
