@@ -70,7 +70,7 @@ app.get('/forecast', (req, res) => { // content-type: json
   let maxMoney = req.query.maxMoney || 10000
   let steps = [];
   for ( let i=0; i<10000; i++ ) {
-    forecastPool.buy('forecast', 1000);
+    forecastPool.buy('forecast', forecastPool.currentStep*1000);
     steps.push({
       moneyInPool: forecastPool._moneyInPool,
       tokenInPool: forecastPool._tokenInPool
