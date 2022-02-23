@@ -66,8 +66,8 @@ app.get('/reset', (req, res) => { // content-type: json
 })
 app.get('/forecast', (req, res) => { // content-type: json
   let forecastPool = new VinetPool();
-  let maxToken = req.query.maxToken || 100000
-  let maxMoney = req.query.maxMoney || 10000
+  let maxToken = parseInt(req.query.maxToken || 100000)
+  let maxMoney = parseInt(req.query.maxMoney || 10000)
   let steps = [];
   for ( let i=0; i<10000; i++ ) {
     console.log("forecastPool.currentStep", forecastPool.currentStep, (2**(forecastPool.currentStep-1)), (2**(forecastPool.currentStep-1))*1000)
@@ -76,7 +76,7 @@ app.get('/forecast', (req, res) => { // content-type: json
       moneyInPool: forecastPool._moneyInPool,
       tokenInPool: forecastPool._tokenInPool
     })
-    if ( forecastPool._moneyInPool>maxMoney && forecastPool._tokenInPool>maxToken ) break;
+    if ( forecastPool._tokenInPool>maxToken ) break;
   }
 
   res.send(steps)
