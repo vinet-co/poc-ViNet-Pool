@@ -76,7 +76,7 @@ app.get('/forecast', (req, res) => { // content-type: json
       moneyInPool: forecastPool._moneyInPool,
       tokenInPool: forecastPool._tokenInPool
     })
-    if ( forecastPool._tokenInPool>maxToken || isNaN(forecastPool._tokenInPool) ) break;
+    if ( forecastPool._moneyInPool>maxMoney || forecastPool._tokenInPool>maxToken || isNaN(forecastPool._tokenInPool) ) break;
   }
 
   res.send(steps)
